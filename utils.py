@@ -40,7 +40,7 @@ def read_text_file(fn="test.txt"):
 
 
 def read_wiki(dataset="wiki.test.tokens"):
-    """ In this dataset, document are separate by their title
+    """ In this dataset, document are separated by their title
         having format = Title here =. We split the dataset set file
         into chunks of text by the titles.
     """
