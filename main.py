@@ -24,9 +24,9 @@ def preprocess(data):
         tokenization ...
     """
     data = [utils.remove_non_word(doc) for doc in data]
-    print("number of doc: ", len(data))
+    logger.info("number of doc: {len(data)}")
     bigrams = utils.extract_bigrams(data)
-    print("bigrams0: ", bigrams[0])
+    logger.info(f"bigrams0: {bigrams[0]}")
     data = [utils.extract_pos(doc) for doc in data]
     data = [doc for doc in data if 40 < len(doc) < 60000]
     data = [utils.remove_stopw(doc.lower()) for doc in data]
@@ -49,8 +49,7 @@ def build_model(num_topics=30):
 
     id2word = corpora.Dictionary(list_of_tokens)
     id2word.filter_extremes(no_below=5, no_above=0.6, keep_n=VOCAB_SIZE)
-    id2word.save(IDX2WORD_FILE)
-    print(" Done processing dataset len, vocab len ", len(id2word.keys()), len(list_of_tokens))
+    logger.info(f"Done processing dataset len, vocab len {len(id2word.keys())}, {len(list_of_tokens)}")
     
 
     # convert data into df vectors
@@ -69,11 +68,13 @@ def build_model(num_topics=30):
         # save the model
         path = pathlib.Path(f"{SAVING_DIR}/lda_topic_{num_topics}")
         path.mkdir(parents=True, exist_ok=True)
-        saving_file = datapath(path)
-        lda_model.save(saving_file)
+        path = path / "lda.model"
+        lda_model.save(str(path.absolute()))
+        id2word.save(IDX2WORD_FILE)
         
 
         vis = gensimvis.prepare(topic_model=lda_model, corpus=corpus, dictionary=id2word)
+        pathlib.Path("lda_vizs").mkdir(parents=True, exist_ok=True)
         pyLDAvis.save_html(vis, f'lda_vizs/lda_visualization_{num_topics}.html')
     return id2word, lda_model
 
@@ -87,16 +88,16 @@ def inference(id2word=None, lda_model=None, num_topics=30):
         id2word = corpora.Dictionary.load(IDX2WORD_FILE)
     
     if not lda_model:
-        saving_file = datapath(f"{SAVING_DIR}/lda_topic_30")
-        lda_model = LdaModel.load(saving_file)
-        #print(lda_model.show_topics(num_topics=num_topics, formatted=False)[0])
+        path = pathlib.Path(f"{SAVING_DIR}/lda_topic_30") #  there are also other models
+        path = path / "lda.model"
+        lda_model = LdaModel.load(str(path))
+
 
     data = utils.read_text_file("test.txt")
     list_of_tokens = preprocess([data])
 
     other_corpus = [id2word.doc2bow(text) for text in list_of_tokens]
     vector = lda_model[other_corpus[0]]
-    print("vector: ", vector)
 
     utils.plot_document_dist(lda_model, other_corpus, num_topics)
 
