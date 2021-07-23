@@ -1,0 +1,5 @@
+gensim
+sklearn
+pyldavis
+nltk
+matplotlib
