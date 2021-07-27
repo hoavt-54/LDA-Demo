@@ -14,10 +14,14 @@ def extract_pos(doc, tag = ["NN"]):
     return " ".join([t[0] for t in pos_tag(text) if t[1] in tag])
 
 
-def extract_bigrams(docs):
+def extract_bigrams(docs, biagram_model=None):
+    """Extract bigrams features before POS remove
+    to keep interesting patterns
+    """
     list_tokens = [lemmatize(remove_stopw(doc.lower())).split() for doc in docs]
-    biagrams = Phrases(list_tokens, min_count=12, max_vocab_size=50000)
-    return [[b for b in biagrams[tks] if "_" in b] for tks in list_tokens]
+    if not biagram_model:
+        biagram_model = Phrases(list_tokens, min_count=12, max_vocab_size=50000, threshold=3)
+    return (biagram_model, [[b for b in biagram_model[tks] if "_" in b] for tks in list_tokens])
 
 
 def lemmatize(doc):
@@ -69,7 +73,6 @@ def plot_document_dist(lda_model, corpus, num_topics=20):
         each topic name is replaced by its top words
 
     """
-
     topic_vector = lda_model[corpus[0]]     
     topic_vector = sorted(topic_vector, key = lambda x: x[1], reverse=True)
     topics = lda_model.show_topics(num_topics=num_topics, formatted=False)
